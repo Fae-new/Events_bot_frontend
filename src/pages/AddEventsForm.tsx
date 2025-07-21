@@ -11,7 +11,6 @@ import {
   Checkbox,
   FormControlLabel,
   MenuItem,
-  IconButton,
   Stack,
   Rating,
 } from "@mui/material";
@@ -380,9 +379,9 @@ const EventCenterForm = ({
   };
 
   // Helper function to get nested value from form data
-  const getNestedValue = (obj: any, path: string): any => {
-    return path.split(".").reduce((acc, part) => acc && acc[part], obj);
-  };
+  // const getNestedValue = (obj: any, path: string): any => {
+  //   return path.split(".").reduce((acc, part) => acc && acc[part], obj);
+  // };
 
   const handleArrayInputChange = (
     field: string,

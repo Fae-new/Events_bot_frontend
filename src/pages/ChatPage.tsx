@@ -23,7 +23,7 @@ import AddIcon from "@mui/icons-material/Add";
 import PersonIcon from "@mui/icons-material/Person";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 
-export const SOCKET_SERVER_URL = "http://localhost:4001";
+export const SOCKET_SERVER_URL = " https://events-bot-rkev.onrender.com";
 
 interface BotInfo {
   name?: string;
