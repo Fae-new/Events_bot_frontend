@@ -255,7 +255,8 @@ const ChatPage: React.FC = () => {
                 background: "linear-gradient(45deg, #6366f1 30%, #8b5cf6 90%)",
                 color: "white",
                 "&:hover": {
-                  background: "linear-gradient(45deg, #4f46e5 30%, #7c3aed 90%)",
+                  background:
+                    "linear-gradient(45deg, #4f46e5 30%, #7c3aed 90%)",
                 },
                 "&:disabled": {
                   background: "rgba(0,0,0,0.05)",
