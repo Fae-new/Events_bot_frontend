@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { io, Socket } from "socket.io-client";
 import ReactMarkdown from "react-markdown";
-import axios from "axios";
+import useReactWebSocket from "../hooks/useWebSocket";
+import {
+  conversationAPI,
+  type Conversation as ApiConversation,
+} from "../services/api";
 import {
   Paper,
   List,
@@ -23,24 +26,11 @@ import AddIcon from "@mui/icons-material/Add";
 import PersonIcon from "@mui/icons-material/Person";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 
-export const SOCKET_SERVER_URL = " https://events-bot-rkev.onrender.com";
+export const SOCKET_SERVER_URL = "http://127.0.0.1:8000/api";
+export const WS_SERVER_URL = "ws://127.0.0.1:8080";
+export const DEFAULT_USER_ID = "user123";
 
-interface BotInfo {
-  name?: string;
-  role?: string;
-}
-
-interface Conversation {
-  conversationId: string;
-  botInfo?: BotInfo;
-}
-
-interface Message {
-  conversationId: string;
-  role: "user" | "assistant" | "system";
-  content: string;
-  timestamp: string;
-}
+type Conversation = ApiConversation;
 
 const theme = createTheme({
   palette: {
@@ -98,11 +88,14 @@ const ChatPage: React.FC = () => {
   const [currentConversationId, setCurrentConversationId] = useState<
     string | null
   >(null);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Use the custom WebSocket hook
+  const { messages, sendMessage, setMessages } = useReactWebSocket(
+    currentConversationId
+  );
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -113,21 +106,12 @@ const ChatPage: React.FC = () => {
   }, [messages, scrollToBottom]);
 
   useEffect(() => {
-    const newSocket = io(SOCKET_SERVER_URL);
-    setSocket(newSocket);
-    return () => {
-      newSocket.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
     const fetchConversations = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get<Conversation[]>(
-          `${SOCKET_SERVER_URL}/conversations`
-        );
-        setConversations(response.data);
+        const response = await conversationAPI.list(1, 20, DEFAULT_USER_ID);
+        console.log(response);
+        setConversations(response);
       } catch (error) {
         console.error("Error fetching conversations:", error);
       } finally {
@@ -137,50 +121,31 @@ const ChatPage: React.FC = () => {
     fetchConversations();
   }, []);
 
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleNewMessage = (message: Message) => {
-      if (message.conversationId === currentConversationId) {
-        setMessages((prevMessages) => [...prevMessages, message]);
+  const selectConversation = useCallback(
+    async (conversationId: string) => {
+      try {
+        setIsLoading(true);
+        setCurrentConversationId(conversationId);
+        setMessages([]); // Clear previous messages
+        // The WebSocket hook will automatically handle the conversation change
+      } catch (error) {
+        console.error("Error fetching conversation:", error);
+      } finally {
+        setIsLoading(false);
       }
-    };
-
-    socket.on("response", handleNewMessage);
-
-    return () => {
-      socket.off("response", handleNewMessage);
-    };
-  }, [socket, currentConversationId]);
-
-  const selectConversation = useCallback(async (conversationId: string) => {
-    try {
-      setIsLoading(true);
-      const response = await axios.get<{ messages: Message[] }>(
-        `${SOCKET_SERVER_URL}/conversations/${conversationId}`
-      );
-      setCurrentConversationId(conversationId);
-      setMessages(response.data.messages || []);
-    } catch (error) {
-      console.error("Error fetching conversation:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [setMessages]
+  );
 
   const createNewConversation = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await axios.post<{
-        conversationId: string;
-        botInfo: BotInfo;
-      }>(`${SOCKET_SERVER_URL}/conversations`);
-      const newConversation: Conversation = {
-        conversationId: response.data.conversationId,
-        botInfo: response.data.botInfo,
-      };
-      setConversations((prev) => [...prev, newConversation]);
-      await selectConversation(newConversation.conversationId);
+      const response = await conversationAPI.create(DEFAULT_USER_ID);
+      if (response.success && response.data) {
+        const newConversation: Conversation = response.data;
+        setConversations((prev) => [...prev, newConversation]);
+        await selectConversation(newConversation.conversationId);
+      }
     } catch (error) {
       console.error("Error creating conversation:", error);
     } finally {
@@ -189,30 +154,19 @@ const ChatPage: React.FC = () => {
   }, [selectConversation]);
 
   const handleSendMessage = useCallback(
-    (e: React.FormEvent) => {
+    async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!newMessage.trim() || !socket || !currentConversationId) return;
-
-      const messageData: Message = {
-        conversationId: currentConversationId,
-        role: "user",
-        content: newMessage.trim(),
-        timestamp: new Date().toISOString(),
-      };
+      if (!newMessage.trim() || !currentConversationId) return;
 
       try {
-        socket.emit("message", JSON.stringify(messageData));
-        setMessages((prev) => [...prev, messageData]);
+        // Send message using the WebSocket hook
+        await sendMessage(newMessage.trim());
         setNewMessage("");
       } catch (error) {
-        console.error("Error sending message:", error);
+        console.error("Failed to send message:", error);
       }
     },
-    [newMessage, socket, currentConversationId]
-  );
-
-  const currentConversation = conversations.find(
-    (c) => c.conversationId === currentConversationId
+    [newMessage, currentConversationId, sendMessage]
   );
 
   return (
@@ -334,7 +288,7 @@ const ChatPage: React.FC = () => {
                           fontSize: "0.875rem",
                         }}
                       >
-                        {convo.botInfo?.name?.charAt(0) || "B"}
+                        {convo.conversationId?.charAt(0)?.toUpperCase() || "C"}
                       </Avatar>
                     </Badge>
                     <ListItemText
@@ -347,8 +301,7 @@ const ChatPage: React.FC = () => {
                               : "400"
                           }
                         >
-                          {convo.botInfo?.name ||
-                            `Chat ${convo.conversationId.substring(0, 4)}`}
+                          {`Chat ${convo.conversationId.substring(0, 8)}`}
                         </Typography>
                       }
                       secondary={
@@ -358,7 +311,7 @@ const ChatPage: React.FC = () => {
                           noWrap
                           sx={{ fontSize: "0.7rem" }}
                         >
-                          {convo.botInfo?.role || "AI Assistant"}
+                          {convo.message_count} messages
                         </Typography>
                       }
                       sx={{ marginLeft: "10px" }}
@@ -396,14 +349,13 @@ const ChatPage: React.FC = () => {
                   {messages.length === 0 ? (
                     <Box className="text-center py-8">
                       <Typography variant="body1" color="textSecondary">
-                        Start a conversation with{" "}
-                        {currentConversation?.botInfo?.name || "the AI"}
+                        Start a conversation with the AI Assistant
                       </Typography>
                     </Box>
                   ) : (
                     messages
-                      .filter((msg) => msg.role !== "system")
-                      .map((msg, index) => (
+                      .filter((msg: any) => msg.role !== "system")
+                      .map((msg: any, index: number) => (
                         <Box
                           key={`${msg.timestamp}-${index}`}
                           className={`flex ${
@@ -525,7 +477,6 @@ const ChatPage: React.FC = () => {
                         variant="outlined"
                         size="small"
                         autoComplete="off"
-                        disabled={isLoading}
                         sx={{
                           flexGrow: 1,
                           width: "auto",
@@ -558,7 +509,7 @@ const ChatPage: React.FC = () => {
                       />
                       <IconButton
                         type="submit"
-                        disabled={!newMessage.trim() || isLoading}
+                        disabled={!newMessage.trim()}
                         sx={{
                           width: "48px",
                           height: "48px",
