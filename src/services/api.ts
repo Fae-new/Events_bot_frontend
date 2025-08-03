@@ -1,8 +1,8 @@
 import axios from "axios";
 
-// Base URLs from backend documentation
-export const API_BASE_URL = "http://127.0.0.1:8000/api";
-export const WS_BASE_URL = "ws://localhost:8080";
+// Base URLs - hardcoded for production
+export const API_BASE_URL = "https://agent.useattend.com/api";
+export const WS_BASE_URL = "wss://agent.useattend.com";
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -33,9 +33,21 @@ export interface Conversation {
 
 export interface Message {
   id: number;
-  role: "user" | "assistant" | "system";
   content: string;
-  timestamp: string;
+  role: "user" | "assistant" | "system";
+  conversation_id: string;
+  created_at: string; // ISO 8601 timestamp
+  updated_at: string; // ISO 8601 timestamp
+}
+
+// API Response when sending a message (POST /chat/send)
+export interface SendMessageResponse {
+  success: boolean;
+  data: {
+    success: boolean;
+    userMessage: Message;
+    aiMessage?: Message; // Only present if role is 'user'
+  };
 }
 
 export interface ConversationDetails {
@@ -313,6 +325,107 @@ export const botConfigAPI = {
     }>
   > => {
     const response = await api.post("/bot-config/reset");
+    return response.data;
+  },
+};
+
+// Chat API for Pusher integration
+export const chatAPI = {
+  // Create a new conversation
+  createConversation: async (
+    conversationId?: string,
+    userId?: string
+  ): Promise<
+    ApiResponse<{
+      conversation_id: string;
+      user_id: string;
+      status: string;
+      created_at: string;
+      updated_at: string;
+    }>
+  > => {
+    const response = await api.post("/chat/conversations", {
+      conversation_id: conversationId || `conv_${Date.now()}`,
+      user_id: userId || "user123",
+    });
+    return response.data;
+  },
+
+  // List conversations for a user
+  listConversations: async (
+    userId: string,
+    page = 1,
+    perPage = 20
+  ): Promise<
+    ApiResponse<{
+      current_page: number;
+      data: Array<{
+        conversation_id: string;
+        user_id: string;
+        status: string;
+        created_at: string;
+        updated_at: string;
+      }>;
+      from: number;
+      last_page: number;
+      per_page: number;
+      to: number;
+      total: number;
+    }>
+  > => {
+    const response = await api.get("/chat/conversations", {
+      params: { user_id: userId, page, per_page: perPage },
+    });
+    return response.data;
+  },
+  // Send a message via REST API (Pusher will broadcast)
+  sendMessage: async (
+    conversationId: string,
+    content: string,
+    role: "user" | "assistant" | "system" = "user"
+  ): Promise<SendMessageResponse> => {
+    const response = await api.post("/chat/send", {
+      conversation_id: conversationId,
+      content,
+      role,
+    });
+    return response.data;
+  },
+
+  // Get conversation messages with pagination
+  getMessages: async (
+    conversationId: string,
+    page = 1,
+    perPage = 50
+  ): Promise<ApiResponse<{ messages: Message[]; pagination: any }>> => {
+    const response = await api.get(
+      `/chat/conversations/${conversationId}/messages`,
+      {
+        params: { page, per_page: perPage },
+      }
+    );
+    return response.data;
+  },
+
+  // Send typing indicator
+  sendTyping: async (
+    conversationId: string,
+    userId: string,
+    isTyping = true
+  ): Promise<ApiResponse<{}>> => {
+    const response = await api.post("/chat/typing", {
+      conversation_id: conversationId,
+      user_id: userId,
+      is_typing: isTyping,
+    });
+    return response.data;
+  },
+
+  // Get conversation details (enhanced version)
+  getConversationDetails: async (
+    conversationId: string
+  ): Promise<ApiResponse<ConversationDetails>> => {
+    const response = await api.get(`/chat/conversations/${conversationId}`);
     return response.data;
   },
 };

@@ -19,9 +19,7 @@ const Navigation: React.FC = () => {
   const navItems = [
     { path: "/", label: "Chat", icon: <Chat /> },
     { path: "/vendors", label: "Vendors", icon: <Business /> },
-    // { path: "/event-form", label: "Add Event", icon: <Event /> },
     { path: "/bot-config", label: "Bot Config", icon: <Settings /> },
-    // { path: "/about", label: "About", icon: <Info /> },
   ];
 
   const getStatusIcon = () => {

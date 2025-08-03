@@ -6,8 +6,9 @@ interface Message {
   id: number;
   role: "user" | "assistant";
   content: string;
-  conversationId: string;
-  timestamp: string;
+  conversation_id: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface UseWebSocketReturn {
@@ -42,8 +43,9 @@ const useReactWebSocket = (
           id: msg.id || Date.now() + index, // Use API id or generate one
           role: msg.role as "user" | "assistant",
           content: msg.content,
-          conversationId: convId,
-          timestamp: msg.timestamp || new Date().toISOString(),
+          conversation_id: convId,
+          created_at: msg.created_at || new Date().toISOString(),
+          updated_at: msg.updated_at || new Date().toISOString(),
         }));
         setMessages(apiMessages);
       }
@@ -99,8 +101,9 @@ const useReactWebSocket = (
                   id: Date.now(),
                   role: "assistant",
                   content: data.response || "",
-                  conversationId: data.conversationId || "",
-                  timestamp: new Date().toISOString(),
+                  conversation_id: data.conversationId || "",
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
                 };
                 setMessages((prev) => [...prev, assistantMessage]);
               }
@@ -162,8 +165,9 @@ const useReactWebSocket = (
           id: Date.now(),
           role: role,
           content: content,
-          conversationId: conversationId,
-          timestamp: new Date().toISOString(),
+          conversation_id: conversationId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         };
 
         setMessages((prev) => [...prev, userMessage]);
