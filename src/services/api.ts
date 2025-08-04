@@ -1,13 +1,16 @@
 import axios from "axios";
 
-// Base URLs - hardcoded for production
-export const API_BASE_URL = "https://agent.useattend.com/api";
-export const WS_BASE_URL = "wss://agent.useattend.com";
+// Base URLs - Production (currently active)
+// export const API_BASE_URL = "https://agent.useattend.com/api";
+// export const WS_BASE_URL = "wss://agent.useattend.com";
+
+// Base URLs - Local Development (commented out)
+export const API_BASE_URL = "http://localhost:8000/api";
+export const WS_BASE_URL = "ws://localhost:8000";
 
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
