@@ -1,12 +1,12 @@
 import axios from "axios";
 
 // Base URLs - Production (currently active)
-export const API_BASE_URL = "https://agent.useattend.com/api";
-export const WS_BASE_URL = "wss://agent.useattend.com";
+// export const API_BASE_URL = "https://agent.useattend.com/api";
+// export const WS_BASE_URL = "wss://agent.useattend.com";
 
 // Base URLs - Local Development (commented out)
-// export const API_BASE_URL = "http://localhost:8000/api";
-// export const WS_BASE_URL = "ws://localhost:8000";
+export const API_BASE_URL = "http://localhost:8000/api";
+export const WS_BASE_URL = "ws://localhost:8000";
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -81,8 +81,8 @@ export interface Vendor {
     address: string;
     city: string;
     state: string;
-    zip_code: string;
-    service_radius: number;
+    zipCode: string;
+    serviceRadius: number;
   };
   contact: {
     phone: string;
@@ -294,6 +294,12 @@ export const vendorAPI = {
     const response = await api.get("/vendors-stats");
     return response.data;
   },
+
+  // Get vendors by IDs
+  getByIds: async (ids: number[]): Promise<ApiResponse<Vendor[]>> => {
+    const response = await api.post("/vendors/by-ids", { ids });
+    return response.data;
+  },
 };
 
 // Bot Configuration API
@@ -393,7 +399,7 @@ export const chatAPI = {
       content,
       role,
     });
-    return response.data;
+    return response.data.data;
   },
 
   // Get conversation messages with pagination

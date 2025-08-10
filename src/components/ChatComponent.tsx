@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PulseLoader, BounceLoader } from "react-spinners";
 import { usePusherChat } from "../hooks/usePusherChat";
+import VendorList from "./VendorList";
 import {
   Box,
   Paper,
@@ -76,6 +77,32 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  // Function to render message content with vendor data support
+  const renderMessageContent = (message: any) => {
+    const hasVendorData = message.data && message.data.type === "vendors";
+
+    const hasFullVendors = hasVendorData && message.data.vendors;
+    const hasVendorIds = hasVendorData && message.data.vendor_ids;
+
+    return (
+      <>
+        <Typography
+          variant="body1"
+          sx={{
+            wordBreak: "break-word",
+            lineHeight: 1.5,
+            fontSize: "0.95rem",
+          }}
+        >
+          {message.content}
+        </Typography>
+
+        {hasFullVendors && <VendorList vendors={message.data.vendors} />}
+        {hasVendorIds && <VendorList vendorIds={message.data.vendor_ids} />}
+      </>
+    );
   };
 
   // If no conversation is selected
@@ -317,16 +344,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
                         : {},
                   }}
                 >
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      wordBreak: "break-word",
-                      lineHeight: 1.5,
-                      fontSize: "0.95rem",
-                    }}
-                  >
-                    {message.content}
-                  </Typography>
+                  {renderMessageContent(message)}
 
                   <Typography
                     variant="caption"
