@@ -39,6 +39,7 @@ export interface Message {
   content: string;
   role: "user" | "assistant" | "system";
   conversation_id: string;
+  data?: any;
   created_at: string; // ISO 8601 timestamp
   updated_at: string; // ISO 8601 timestamp
 }
@@ -80,8 +81,8 @@ export interface Vendor {
     address: string;
     city: string;
     state: string;
-    zip_code: string;
-    service_radius: number;
+    zipCode: string;
+    serviceRadius: number;
   };
   contact: {
     phone: string;
@@ -293,6 +294,12 @@ export const vendorAPI = {
     const response = await api.get("/vendors-stats");
     return response.data;
   },
+
+  // Get vendors by IDs
+  getByIds: async (ids: number[]): Promise<ApiResponse<Vendor[]>> => {
+    const response = await api.post("/vendors/by-ids", { ids });
+    return response.data;
+  },
 };
 
 // Bot Configuration API
@@ -392,7 +399,7 @@ export const chatAPI = {
       content,
       role,
     });
-    return response.data;
+    return response.data.data;
   },
 
   // Get conversation messages with pagination

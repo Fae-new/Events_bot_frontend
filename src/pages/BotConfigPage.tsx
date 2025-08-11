@@ -110,11 +110,7 @@ const BotConfigPage: React.FC = () => {
     try {
       setSaving(true);
       const response = await botConfigAPI.update(config);
-      if (response.success) {
-        toast.success("Bot configuration updated successfully!");
-      } else {
-        toast.error("Failed to update bot configuration");
-      }
+      console.log(response);
     } catch (error) {
       console.error("Error saving bot config:", error);
       toast.error("Error saving bot configuration");

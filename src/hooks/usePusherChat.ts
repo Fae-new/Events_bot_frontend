@@ -109,6 +109,7 @@ export const usePusherChat = (
           // Check if data has messages array
           let newMessages: Message[] = [];
           if (response.data.messages && Array.isArray(response.data.messages)) {
+            console.log("Loaded messages:", response.data.messages[0]);
             newMessages = [...response.data.messages].reverse(); // API returns newest first
           } else {
             console.error("❌ Expected messages array but got:", response.data);
@@ -155,7 +156,8 @@ export const usePusherChat = (
         setIsLoading(true);
         // Send message to server but don't update UI
         // Let page refresh handle the real message sync
-        await chatAPI.sendMessage(conversationId, content, role);
+        const res = await chatAPI.sendMessage(conversationId, content, role);
+        return res;
       } catch (error) {
         console.error("Failed to send message:", error);
 
