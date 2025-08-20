@@ -151,7 +151,7 @@ const BotConfigPage: React.FC = () => {
   const removeContextData = (index: number) => {
     setConfig((prev) => ({
       ...prev,
-      context_data: prev.contextData.filter((_, i) => i !== index),
+      contextData: prev.contextData.filter((_, i) => i !== index),
     }));
   };
 
