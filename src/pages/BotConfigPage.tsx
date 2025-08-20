@@ -237,7 +237,7 @@ const BotConfigPage: React.FC = () => {
                 onChange={(e) =>
                   setConfig((prev) => ({
                     ...prev,
-                    system_prompt: e.target.value,
+                    systemPrompt: e.target.value,
                   }))
                 }
                 placeholder="Define how the bot should behave and respond to users..."
