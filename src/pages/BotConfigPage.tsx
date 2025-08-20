@@ -79,7 +79,7 @@ const BotConfigPage: React.FC = () => {
   const [config, setConfig] = useState<BotConfig>({
     systemPrompt: "",
     contextData: [],
-    personality: {},
+    personality: { traits: [] },
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -159,7 +159,9 @@ const BotConfigPage: React.FC = () => {
     if (newPersonalityTrait.trim()) {
       setConfig((prev) => ({
         ...prev,
-        personality: [...prev.personality, newPersonalityTrait.trim()],
+        personality: {
+          traits: [...(prev.personality?.traits || []), newPersonalityTrait.trim()],
+        },
       }));
       setNewPersonalityTrait("");
     }
@@ -168,9 +170,9 @@ const BotConfigPage: React.FC = () => {
   const removePersonalityTrait = (index: number) => {
     setConfig((prev) => ({
       ...prev,
-      personality: prev.personality.traits.filter(
-        (_: any, i: any) => i !== index
-      ),
+      personality: {
+        traits: prev.personality.traits.filter((_: any, i: any) => i !== index),
+      },
     }));
   };
 
