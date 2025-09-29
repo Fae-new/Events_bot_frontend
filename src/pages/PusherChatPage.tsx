@@ -18,7 +18,7 @@ import ChatIcon from "@mui/icons-material/Chat";
 import AddIcon from "@mui/icons-material/Add";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 
-export const DEFAULT_USER_ID = "user123";
+export const DEFAULT_USER_ID = "1";
 
 type Conversation = ApiConversation;
 

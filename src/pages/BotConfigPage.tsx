@@ -160,7 +160,10 @@ const BotConfigPage: React.FC = () => {
       setConfig((prev) => ({
         ...prev,
         personality: {
-          traits: [...(prev.personality?.traits || []), newPersonalityTrait.trim()],
+          traits: [
+            ...(prev.personality?.traits || []),
+            newPersonalityTrait.trim(),
+          ],
         },
       }));
       setNewPersonalityTrait("");

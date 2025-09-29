@@ -299,7 +299,9 @@ const VendorsPage: React.FC = () => {
                     height: "100%",
                     display: "flex",
                     flexDirection: "column",
+                    cursor: "pointer",
                   }}
+                  onClick={() => navigate(`/vendors/${vendor.id}`)}
                 >
                   <CardContent sx={{ flexGrow: 1 }}>
                     <Box
@@ -412,7 +414,11 @@ const VendorsPage: React.FC = () => {
                         </IconButton>
                       )}
                     </Box>
-                    <Button variant="contained" size="small">
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => navigate(`/vendors/${vendor.id}`)}
+                    >
                       View Details
                     </Button>
                   </CardActions>

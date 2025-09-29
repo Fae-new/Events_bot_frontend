@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+
 import { motion, AnimatePresence } from "framer-motion";
 import { PulseLoader, BounceLoader } from "react-spinners";
 import { usePusherChat } from "../hooks/usePusherChat";
@@ -18,6 +20,7 @@ import {
   Person as UserIcon,
   Circle as StatusIcon,
 } from "@mui/icons-material";
+import VendorResponseUi from "./VendorResponseUi";
 
 interface ChatComponentProps {
   conversationId: string | null;
@@ -82,25 +85,42 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
   // Function to render message content with vendor data support
   const renderMessageContent = (message: any) => {
     const hasVendorData = message.data && message.data.type === "vendors";
+    const hasVendorResponses =
+      message.data && message.data.type === "vendor_responses";
 
     const hasFullVendors = hasVendorData && message.data.vendors;
     const hasVendorIds = hasVendorData && message.data.vendor_ids;
 
     return (
       <>
-        <Typography
-          variant="body1"
+        <Box
           sx={{
             wordBreak: "break-word",
             lineHeight: 1.5,
             fontSize: "0.95rem",
           }}
         >
-          {message.content}
-        </Typography>
+          <ReactMarkdown>{message.content}</ReactMarkdown>
+        </Box>
 
-        {hasFullVendors && <VendorList vendors={message.data.vendors} />}
-        {hasVendorIds && <VendorList vendorIds={message.data.vendor_ids} />}
+        {hasFullVendors && (
+          <VendorList
+            vendors={message.data.vendors}
+            conversationId={conversationId || undefined}
+          />
+        )}
+        {hasVendorIds && (
+          <VendorList
+            vendorIds={message.data.vendor_ids}
+            conversationId={conversationId || undefined}
+          />
+        )}
+        {hasVendorResponses && (
+          <VendorResponseUi
+            userId="1"
+            conversationId={conversationId as string}
+          />
+        )}
       </>
     );
   };

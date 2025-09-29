@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import PusherChatPage from "./pages/PusherChatPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import VendorsPage from "./pages/VendorsPage";
+import VendorDetailsPage from "./pages/VendorDetailsPage";
 import AddVendorPage from "./pages/AddVendorPage";
 import BotConfigPage from "./pages/BotConfigPage";
 import Navigation from "./components/Navigation";
@@ -14,6 +15,7 @@ function App() {
       <Routes>
         <Route path="/" element={<PusherChatPage />} />
         <Route path="/vendors" element={<VendorsPage />} />
+        <Route path="/vendors/:id" element={<VendorDetailsPage />} />
         <Route path="/vendors/add" element={<AddVendorPage />} />
         <Route path="/bot-config" element={<BotConfigPage />} />
         <Route path="*" element={<NotFoundPage />} />

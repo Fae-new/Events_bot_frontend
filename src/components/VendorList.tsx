@@ -13,16 +13,22 @@ import {
   Menu,
   MenuItem,
   CircularProgress,
+  Alert,
 } from "@mui/material";
 import { MoreVert as MoreVertIcon } from "@mui/icons-material";
-import { vendorAPI, type Vendor } from "../services/api";
+import { vendorAPI, type Vendor, API_BASE_URL } from "../services/api";
 
 interface VendorListProps {
   vendors?: Vendor[];
   vendorIds?: number[];
+  conversationId?: string;
 }
 
-const VendorList: React.FC<VendorListProps> = ({ vendors, vendorIds }) => {
+const VendorList: React.FC<VendorListProps> = ({
+  vendors,
+  vendorIds,
+  conversationId,
+}) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [selectedVendor, setSelectedVendor] = React.useState<Vendor | null>(
     null
@@ -30,6 +36,8 @@ const VendorList: React.FC<VendorListProps> = ({ vendors, vendorIds }) => {
   const [fetchedVendors, setFetchedVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sendingBrief, setSendingBrief] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Fetch vendors by IDs if vendorIds are provided
   useEffect(() => {
@@ -70,13 +78,51 @@ const VendorList: React.FC<VendorListProps> = ({ vendors, vendorIds }) => {
     setSelectedVendor(null);
   };
 
-  const handleSendBrief = () => {
-    if (selectedVendor) {
-      // TODO: Implement send brief functionality
-      console.log("Send brief to vendor:", selectedVendor);
-      // You can add your brief sending logic here
+  const handleSendBrief = async () => {
+    if (!selectedVendor || !conversationId) {
+      setError("No conversation ID provided or vendor selected");
+      handleMenuClose();
+      return;
     }
-    handleMenuClose();
+
+    setSendingBrief(true);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/conversations/${conversationId}/send-brief-to-vendors`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            user_id: "1",
+            vendor_ids: [selectedVendor.id],
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSuccessMessage(
+          `Event brief successfully sent to ${selectedVendor.name}!`
+        );
+
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        setError(data.error || "Failed to send brief to vendor");
+      }
+    } catch (err) {
+      setError("Failed to send brief to vendor");
+      console.error("Error sending brief:", err);
+    } finally {
+      setSendingBrief(false);
+      handleMenuClose();
+    }
   };
 
   // Determine which vendors to display
@@ -117,6 +163,23 @@ const VendorList: React.FC<VendorListProps> = ({ vendors, vendorIds }) => {
 
   return (
     <Box sx={{ mt: 2 }}>
+      {/* Success Message */}
+      {successMessage && (
+        <Alert
+          severity="success"
+          sx={{ mb: 2 }}
+          onClose={() => setSuccessMessage(null)}
+        >
+          {successMessage}
+        </Alert>
+      )}
+
+      {/* Error Message */}
+      {error && !loading && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
       <TableContainer component={Paper}>
         <Table size="small">
           <TableHead>
@@ -181,7 +244,21 @@ const VendorList: React.FC<VendorListProps> = ({ vendors, vendorIds }) => {
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={handleSendBrief}>Send Brief</MenuItem>
+        <MenuItem
+          onClick={handleSendBrief}
+          disabled={sendingBrief || !conversationId}
+          title={!conversationId ? "No conversation context available" : ""}
+        >
+          {sendingBrief ? "Sending..." : "Send Brief"}
+        </MenuItem>
+        {!conversationId && (
+          <Typography
+            variant="caption"
+            sx={{ px: 2, py: 1, color: "text.secondary", fontSize: "0.7rem" }}
+          >
+            No conversation context
+          </Typography>
+        )}
       </Menu>
     </Box>
   );
