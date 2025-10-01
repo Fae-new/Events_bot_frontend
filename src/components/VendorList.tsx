@@ -14,6 +14,7 @@ import {
   MenuItem,
   CircularProgress,
   Alert,
+  Chip,
 } from "@mui/material";
 import { MoreVert as MoreVertIcon } from "@mui/icons-material";
 import { vendorAPI, type Vendor, API_BASE_URL } from "../services/api";
@@ -48,8 +49,14 @@ const VendorList: React.FC<VendorListProps> = ({
       setError(null);
 
       try {
-        const response = await vendorAPI.getByIds(vendorIds);
+        const response = await vendorAPI.getByIds(
+          vendorIds,
+          conversationId as string,
+          "1"
+        );
+        console.log("Fetched vendors:", response);
         if (response.success && response.data) {
+          console.log(response.data[0]);
           setFetchedVendors(response.data);
         } else {
           setError("Failed to fetch vendor data");
@@ -192,6 +199,8 @@ const VendorList: React.FC<VendorListProps> = ({
               <TableCell>Pricing</TableCell>
               <TableCell>Services</TableCell>
               <TableCell>Specialties</TableCell>
+              <TableCell>Sent Brief</TableCell>
+              <TableCell>Response</TableCell>
               <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -223,6 +232,29 @@ const VendorList: React.FC<VendorListProps> = ({
                 </TableCell>
                 <TableCell>
                   {vendor.specialties ? vendor.specialties.join(", ") : "N/A"}
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={vendor.has_been_sent_brief ? "Sent" : "Not Sent"}
+                    color={vendor.has_been_sent_brief ? "success" : "default"}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell>
+                  {vendor?.response?.content ? (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        maxWidth: 200,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {vendor.response.content}
+                    </Typography>
+                  ) : (
+                    <Chip label="Not Responded" color="warning" size="small" />
+                  )}
                 </TableCell>
                 <TableCell align="center">
                   <IconButton

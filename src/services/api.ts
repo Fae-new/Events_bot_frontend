@@ -111,6 +111,28 @@ export interface Vendor {
   rating: number;
   reviews: number;
   created_at: string;
+  has_been_sent_brief?: boolean;
+  response?: {
+    id: number | null;
+    user_id: string;
+    vendor_id: string;
+    sender: string;
+    event_code: string;
+    title: string;
+    content: string | null;
+    conversation_id: string;
+    timestamp: string;
+    vendor_info: {
+      name: string;
+      category: string;
+      contact: {
+        email: string;
+        phone: string;
+        website: string;
+      };
+      rating: string;
+    };
+  } | null;
 }
 
 export interface EventBrief {
@@ -296,8 +318,16 @@ export const vendorAPI = {
   },
 
   // Get vendors by IDs
-  getByIds: async (ids: number[]): Promise<ApiResponse<Vendor[]>> => {
-    const response = await api.post("/vendors/by-ids", { ids });
+  getByIds: async (
+    ids: number[],
+    conversation_id: string,
+    user_id: string
+  ): Promise<ApiResponse<Vendor[]>> => {
+    const response = await api.post("/vendors/by-ids", {
+      ids,
+      conversation_id,
+      user_id,
+    });
     return response.data;
   },
 };
